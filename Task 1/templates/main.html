@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Main Page</title>
+<script>
+    // This function will run when the page is fully loaded
+    window.onload = function() {
+        // Get a reference to the form element
+        const form = document.querySelector('#query-area form');
+
+        form.addEventListener('submit', function(event) {
+            // Prevent the form from doing a full page submission
+            event.preventDefault();
+
+            // Construct the request data from the form fields
+            const formData = new FormData(form);
+
+            // Send an asynchronous POST request
+            fetch("{{ url_for('query_music') }}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsArea = document.getElementById('search-results');
+                resultsArea.innerHTML = ''; // Clear previous results
+
+                if (data.items && data.items.length > 0) {
+                    for (const item of data.items) {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <div class="music-info">
+                                <p><strong>Title:</strong> ${item.title}</p>
+                                <p><strong>Artist:</strong> ${item.artist}</p>
+                                <p><strong>Year:</strong> ${item.year}</p>
+                            </div>
+                            <div class="artist-image">
+                                <img src="${item.image_url}" alt="${item.artist}">
+                            </div>
+                            <button class="subscribe-btn" data-title="${item.title}" data-artist="${item.artist}">Subscribe</button>
+                        `;
+                        resultsArea.appendChild(li);
+                    }
+                } else {
+                    resultsArea.innerHTML = '<li>No result retrieved. Please query again.</li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        // Event delegation for "Subscribe" button clicks within the search results
+        document.getElementById('search-results').addEventListener('click', function(event) {
+            const subscriptionArea = document.getElementById('subscription-area').querySelector('ul');
+            if (event.target.classList.contains('subscribe-btn')) {
+                const title = event.target.getAttribute('data-title');
+                const artist = event.target.getAttribute('data-artist');
+
+                // Construct the request data
+                const data = new URLSearchParams();
+                data.append('title', title);
+                data.append('artist', artist);
+
+                // Send an asynchronous POST request to subscribe
+                fetch("{{ url_for('subscribe') }}", {
+                    method: 'POST',
+                    body: data
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // If subscription is successful, fetch the updated list of subscriptions
+                        fetch("{{ url_for('get_subscriptions_json') }}") // Make sure this matches the correct route name
+                        .then(response => response.json())
+                        .then(subscriptionsData => {
+                            // Now, `subscriptionsData.subscriptions` contains the list of subscriptions.
+                            // Use this data to update your UI. For instance:
+                            updateUIWithSubscriptions(subscriptionsData.subscriptions);  // You'll need to implement this function
+                            alert(data.message);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching updated subscriptions:', error);
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Subscription error:', error);
+                });
+            }
+        });
+        function updateUIWithSubscriptions(subscriptions) {
+            const subscriptionArea = document.getElementById('subscription-area').querySelector('ul');
+            subscriptionArea.innerHTML = ''; // Clear the existing subscriptions
+
+            for (const sub of subscriptions) {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="music-info">
+                        <p><strong>Title:</strong> ${sub.title}</p>
+                        <p><strong>Artist:</strong> ${sub.artist}</p>
+                        <p><strong>Year:</strong> ${sub.year || 'N/A'}</p>
+                    </div>
+                    <div class="artist-image">
+                        <img src="${sub.image_url || ''}" alt="${sub.artist}">
+                    </div>
+                    <button class="remove-btn" data-title="${sub.title}" data-artist="${sub.artist}">Remove</button>
+                `;
+                subscriptionArea.appendChild(li);
+            }
+        }
+        // Event delegation for "Remove" button clicks within the Subscription Area
+        document.getElementById('subscription-area').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-btn')) {
+                const title = event.target.getAttribute('data-title');
+                const artist = event.target.getAttribute('data-artist');
+            
+                // Construct the request data
+                const data = new URLSearchParams();
+                data.append('title', title);
+                data.append('artist', artist);
+            
+                // Send an asynchronous POST request to remove the subscription
+                fetch("{{ url_for('remove_subscription') }}", {
+                    method: 'POST',
+                    body: data
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Handle the response, e.g., remove the item from the list and show a success message
+                    if (data.success) {
+                        event.target.parentElement.remove();  // Removes the li containing the music subscription
+                    }
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Remove subscription error:', error);
+                });
+            }
+        });
+    };
+</script>
+{% endblock %}
+
+{% block body %}
+<!-- User Area -->
+<div id="user-area">
+    <h2>Welcome, {{ user_name }}</h2>
+</div>
+
+<!-- Subscription Area -->
+<div id="subscription-area">
+    <h3>Subscriptions</h3>
+    <ul>
+        {% if subscriptions %}
+            {% for music in subscriptions %}
+            <li>
+                <div class="music-info">
+                    <p><strong>Title:</strong> {{ music.title }}</p>
+                    <p><strong>Artist:</strong> {{ music.artist }}</p>
+                    <p><strong>Year:</strong> {{ music.year }}</p>
+                </div>
+                <div class="artist-image">
+                    <img src="{{ music.image_url }}" alt="{{ music.artist }}">
+                </div>
+                <button class="remove-btn" data-title="{{ music.title }}" data-artist="{{ music.artist }}">Remove</button>
+            </li>
+            {% endfor %}
+        {% else %}
+            <li class="centered-text">Not subscribed to anything.</li>
+        {% endif %}
+    </ul>
+</div>
+
+<!-- Query Area -->
+<div id="query-area">
+    <h3>Search Music</h3>
+    <p>Search is case-sensitive.</p>
+    <form action="{{ url_for('query_music') }}" method="post">
+        <input type="text" name="title" placeholder="Title">
+        <input type="text" name="year" placeholder="Year">
+        <input type="text" name="artist" placeholder="Artist">
+        <input type="submit" value="Query">
+    </form>
+    <ul id="search-results">
+        <!-- Search results will be populated here dynamically -->
+    </ul>
+</div>
+
+<!-- Logout Link -->
+<!-- <a href="{{ url_for('logout') }}">Logout</a> -->
+<form action="{{ url_for('logout') }}" method="post">
+    <button type="submit">Logout</button>
+</form>
+{% endblock %}

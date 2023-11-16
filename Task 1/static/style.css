@@ -1,0 +1,126 @@
+body {
+    margin: 0;
+    font-family: "helvetica", sans-serif;
+    text-align: center;
+    background-color: #b3e4ff;
+}
+
+/* Common Styles */
+input[type=text], input[type=email], input[type=password], textarea, input[type="file"] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    background-color: #ccecfe;
+    border: 1px solid #e0e0e0;
+    font-size: 16px;
+}
+
+input[type="submit"], .navbar a {
+    padding: 0.5em 1em;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+input[type="submit"]:hover, .navbar a:hover {
+    background-color: #0056b3;
+}
+
+div, .forum_post, form {
+    padding: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    margin: 2em auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    background-color: #b3e4ff;
+}
+
+textarea {
+    resize: vertical;
+    margin-bottom: 1em;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 1em;
+    width: 120px;
+}
+
+/* Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #42d7f5;
+    padding: 10px 0;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.logout-button {
+    background-color: red;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.logout-button:hover {
+    background-color: darkred;
+}
+
+/* Main Styles */
+#user-area {
+    padding: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+#subscription-area {
+    padding: 20px;
+}
+
+#subscription-area ul {
+    list-style-type: none;
+}
+
+#subscription-area li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+}
+
+.music-info {
+    flex: 1;
+}
+
+.artist-image img {
+    max-width: 50px;
+    max-height: 50px;
+    margin-right: 20px;
+}
+
+.centered-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
